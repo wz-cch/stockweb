@@ -43,6 +43,14 @@
     };
   }
 
+  // 建議 → 顏色（台股：買紅、賣綠、其餘藍）
+  function recColor(rec, c) {
+    rec = rec || "";
+    if (/買|加碼|建倉|進場|布局/.test(rec)) return c.gain;
+    if (/賣|減碼|停利|出場|了結/.test(rec)) return c.loss;
+    return c.cat[0];
+  }
+
   // ── ECharts 共用設定 ──────────────────────────────
   function baseGrid() { return { left: 8, right: 14, top: 30, bottom: 6, containLabel: true }; }
   function axisText(c) { return { color: c.muted, fontSize: 11 }; }
@@ -86,7 +94,19 @@
       [["ma60", "MA60季", c.ma60], ["ma20", "MA20月", c.ma20], ["ma5", "MA5週", c.ma5]].forEach(function (m) {
         if (s[m[0]]) series.push({ name: m[1], type: "line", data: s[m[0]], symbol: "none", smooth: true, lineStyle: { width: 1.5, color: m[2] }, itemStyle: { color: m[2] } });
       });
-      series.push({ name: "收盤", type: "line", data: s.close, symbol: "none", lineStyle: { width: 2.5, color: c.close }, itemStyle: { color: c.close }, z: 5 });
+      var closeSer = { name: "收盤", type: "line", data: s.close, symbol: "none", lineStyle: { width: 2.5, color: c.close }, itemStyle: { color: c.close }, z: 5 };
+      // 歷次建議標記（pin，落在收盤線上，顏色依買/賣/持有）
+      if (spec.markers && spec.markers.length) {
+        closeSer.markPoint = {
+          symbol: "pin", symbolSize: 34, z: 10,
+          label: { color: "#fff", fontSize: 10, fontWeight: "bold" },
+          data: spec.markers.map(function (m) {
+            return { coord: [m.x, m.y], value: m.rec, name: m.x,
+                     itemStyle: { color: recColor(m.rec, c) } };
+          })
+        };
+      }
+      series.push(closeSer);
       return {
         grid: baseGrid(), tooltip: tooltip(c),
         legend: { data: ["收盤", "MA5週", "MA20月", "MA60季", "布林帶"], textStyle: { color: c.text, fontSize: 11 }, top: 0, right: 0 },
