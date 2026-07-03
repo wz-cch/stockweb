@@ -1,0 +1,199 @@
+/* 台股分析站 — 設計系統
+ * 配色依 dataviz 規範；漲跌遵循台股慣例（紅漲綠跌，與美股相反）。
+ * 亮/暗雙主題：prefers-color-scheme 為預設，[data-theme] 由切換鈕覆蓋（雙向皆須勝出）。
+ */
+:root {
+  /* 版面 */
+  --page:        #f9f9f7;
+  --surface-1:   #fcfcfb;   /* 卡片/圖表底 */
+  --surface-2:   #f2f2ef;   /* 次級底（表頭、badge） */
+  --text-1:      #0b0b0b;
+  --text-2:      #52514e;
+  --text-muted:  #898781;
+  --grid:        #e1e0d9;
+  --axis:        #c3c2b7;
+  --border:      rgba(11,11,11,0.10);
+
+  /* 台股語意色（紅漲綠跌） */
+  --gain:        #d03b3b;   /* 漲 / 正 */
+  --loss:        #0f9d58;   /* 跌 / 負 */
+  --flat:        #898781;
+
+  /* 均線類別色（已過 dataviz 驗證） */
+  --series-close: #0b0b0b;  /* 收盤 = 主墨 */
+  --series-ma5:   #eb6834;  /* 週線 橘 */
+  --series-ma20:  #2a78d6;  /* 月線 藍 */
+  --series-ma60:  #1baf7a;  /* 季線 青 */
+  --band:         #b8c2cc;  /* 布林帶 中性灰 */
+
+  /* 類別色盤（法人/毛利率等多序列） */
+  --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eb6834; --cat-4: #4a3aa7;
+
+  /* 操作模式徽章底色 */
+  --mode-hold:   #2a78d6;   /* 持倉股 */
+  --mode-watch:  #898781;   /* 觀望股 */
+  --mode-etf:    #1baf7a;   /* 長期ETF */
+  --mode-lev:    #eb6834;   /* 槓桿ETF */
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page:        #0d0d0d;
+    --surface-1:   #1a1a19;
+    --surface-2:   #26262400;
+    --surface-2:   #242422;
+    --text-1:      #ffffff;
+    --text-2:      #c3c2b7;
+    --text-muted:  #898781;
+    --grid:        #2c2c2a;
+    --axis:        #383835;
+    --border:      rgba(255,255,255,0.10);
+    --gain:        #f0605f;
+    --loss:        #1db571;
+    --series-close: #f4f4f2;
+    --series-ma5:   #d95926;
+    --series-ma20:  #3987e5;
+    --series-ma60:  #199e70;
+    --band:         #3a4652;
+    --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #d95926; --cat-4: #9085e9;
+  }
+}
+/* 切換鈕覆蓋（雙向都要贏過 media query） */
+:root[data-theme="light"] {
+  --page:#f9f9f7; --surface-1:#fcfcfb; --surface-2:#f2f2ef;
+  --text-1:#0b0b0b; --text-2:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --gain:#d03b3b; --loss:#0f9d58;
+  --series-close:#0b0b0b; --series-ma5:#eb6834; --series-ma20:#2a78d6; --series-ma60:#1baf7a; --band:#b8c2cc;
+  --cat-1:#2a78d6; --cat-2:#1baf7a; --cat-3:#eb6834; --cat-4:#4a3aa7;
+}
+:root[data-theme="dark"] {
+  --page:#0d0d0d; --surface-1:#1a1a19; --surface-2:#242422;
+  --text-1:#ffffff; --text-2:#c3c2b7; --text-muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --gain:#f0605f; --loss:#1db571;
+  --series-close:#f4f4f2; --series-ma5:#d95926; --series-ma20:#3987e5; --series-ma60:#199e70; --band:#3a4652;
+  --cat-1:#3987e5; --cat-2:#199e70; --cat-3:#d95926; --cat-4:#9085e9;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: var(--page);
+  color: var(--text-1);
+  line-height: 1.55;
+  font-size: 15px;
+}
+a { color: var(--cat-1); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── 版面框架 ────────────────────────────── */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 64px; }
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-in { max-width: 1180px; margin: 0 auto; padding: 12px 20px;
+  display: flex; align-items: center; gap: 16px; }
+.brand { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
+.brand a { color: var(--text-1); }
+.topbar .spacer { flex: 1; }
+.crumb { color: var(--text-muted); font-size: 13px; }
+.crumb a { color: var(--text-2); }
+.gen-time { color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.theme-btn {
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-2);
+  border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 13px; line-height: 1;
+}
+.theme-btn:hover { background: var(--surface-2); }
+
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 22px 0 4px; }
+h2 { font-size: 17px; font-weight: 700; margin: 30px 0 12px; letter-spacing: -0.01em;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 14px; font-weight: 700; margin: 18px 0 8px; color: var(--text-2); }
+.sub { color: var(--text-2); font-size: 14px; }
+
+/* ── 卡片 ────────────────────────────── */
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px; margin: 14px 0;
+}
+.grid { display: grid; gap: 14px; }
+@media (min-width: 720px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+
+/* ── 徽章 ────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  color: #fff; white-space: nowrap;
+}
+.badge.mode-持倉股 { background: var(--mode-hold); }
+.badge.mode-觀望股 { background: var(--mode-watch); }
+.badge.mode-長期ETF { background: var(--mode-etf); }
+.badge.mode-槓桿ETF { background: var(--mode-lev); }
+.badge.ghost { background: var(--surface-2); color: var(--text-2); }
+
+/* ── 漲跌語意 ────────────────────────────── */
+.gain { color: var(--gain); }
+.loss { color: var(--loss); }
+.flat { color: var(--flat); }
+
+/* ── 統計磚 ────────────────────────────── */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.tile .k { font-size: 12px; color: var(--text-muted); margin-bottom: 3px; }
+.tile .v { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.tile .v.sm { font-size: 16px; }
+.tile .note { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+
+/* ── 表格 ────────────────────────────── */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: right; padding: 9px 12px; border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { color: var(--text-2); font-weight: 600; font-size: 12px;
+  background: var(--surface-2); position: sticky; top: 0; cursor: pointer; user-select: none; }
+thead th:hover { color: var(--text-1); }
+th.sorted::after { content: " ▾"; opacity: .6; }
+th.sorted.asc::after { content: " ▴"; }
+tbody tr:hover { background: var(--surface-2); }
+td.name a { font-weight: 600; }
+
+/* ── 圖表 ────────────────────────────── */
+.chart { width: 100%; height: 340px; }
+.chart.sm { height: 260px; }
+.chart.xs { height: 200px; }
+.legend-note { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+/* ── PE band 條 ────────────────────────────── */
+.peband { margin: 8px 0 4px; }
+.peband .track { position: relative; height: 10px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--loss) 0%, var(--surface-2) 50%, var(--gain) 100%);
+  opacity: .5; }
+.peband .mark { position: absolute; top: -4px; width: 3px; height: 18px; background: var(--text-1); border-radius: 2px; }
+.peband .labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px;
+  font-variant-numeric: tabular-nums; }
+
+/* ── 判讀區塊（LLM prose）────────────────── */
+.prose { font-size: 14.5px; }
+.prose p { margin: 8px 0; }
+.prose ul { margin: 8px 0; padding-left: 20px; }
+.prose li { margin: 3px 0; }
+.callout { border-left: 3px solid var(--cat-1); background: var(--surface-2);
+  padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0; }
+.callout.warn { border-color: var(--gain); }
+.callout.ok { border-color: var(--loss); }
+
+/* ── 訊號時間軸 ────────────────────────────── */
+.sig-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.sig-list li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.sig-list .d { color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 74px; }
+
+.foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border);
+  color: var(--text-muted); font-size: 12px; }
+.disclaimer { margin-top: 8px; font-size: 11px; color: var(--text-muted); }
