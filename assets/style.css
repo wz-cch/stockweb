@@ -189,6 +189,21 @@ td.name a { font-weight: 600; }
 .callout.warn { border-color: var(--gain); }
 .callout.ok { border-color: var(--loss); }
 
+/* ── 歷史報告清單 ────────────────────────────── */
+.daily-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.daily-chip { display: inline-block; padding: 6px 12px; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--surface-1); color: var(--text-2);
+  font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.daily-chip:hover { background: var(--surface-2); color: var(--text-1); text-decoration: none; }
+
+/* ── 每日總覽封存頁（.prose 內含完整 markdown）──────────── */
+.prose h1 { font-size: 24px; }
+.prose h2 { font-size: 16px; margin: 22px 0 8px; }
+.prose h3 { font-size: 13.5px; color: var(--text-2); }
+.prose table { margin: 8px 0; }
+.prose hr { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
+.prose .callout { font-size: 13.5px; }
+
 /* ── 訊號時間軸 ────────────────────────────── */
 .sig-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
 .sig-list li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
