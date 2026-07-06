@@ -140,11 +140,16 @@
         }]
       };
     },
-    // 多序列折線（毛利率/營益率/淨利率）
+    // 多序列折線（毛利率/營益率/淨利率；ETF α 走勢）
     lines: function (spec, c) {
       var series = spec.series.map(function (ser, i) {
-        return { name: ser.name, type: "line", data: ser.values, symbol: "circle", symbolSize: 6, smooth: true, lineStyle: { width: 2, color: c.cat[i % 4] }, itemStyle: { color: c.cat[i % 4] } };
+        return { name: ser.name, type: "line", data: ser.values, symbol: "circle", symbolSize: 5, smooth: true, connectNulls: true, lineStyle: { width: 2, color: c.cat[i % 4] }, itemStyle: { color: c.cat[i % 4] } };
       });
+      if (spec.zeroLine && series.length) {   // α 圖：畫 0 基準線（＝與基準同步）
+        series[0].markLine = { silent: true, symbol: "none",
+          lineStyle: { color: c.muted, type: "dashed", width: 1 },
+          label: { show: false }, data: [{ yAxis: 0 }] };
+      }
       return {
         grid: baseGrid(), tooltip: tooltip(c),
         legend: { data: spec.series.map(function (s) { return s.name; }), textStyle: { color: c.text, fontSize: 11 }, top: 0, right: 0 },
