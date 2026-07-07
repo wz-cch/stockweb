@@ -204,6 +204,13 @@ td.name a { font-weight: 600; }
 .prose hr { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
 .prose .callout { font-size: 13.5px; }
 
+/* ── 近期新聞 ────────────────────────────── */
+.news-list { list-style: none; padding: 0; margin: 0; }
+.news-list li { padding: 11px 0; border-bottom: 1px solid var(--border); }
+.news-list a { font-weight: 600; font-size: 14px; line-height: 1.45; }
+.news-snip { color: var(--text-2); font-size: 13px; margin-top: 4px; line-height: 1.55; }
+.news-meta { color: var(--text-muted); font-size: 11px; margin-top: 3px; }
+
 /* ── 訊號時間軸 ────────────────────────────── */
 .sig-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
 .sig-list li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
